@@ -1,5 +1,6 @@
 var path = require("path");
 var fs = require("fs");
+const { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } = require("constants");
 
 module.exports = function (app){
     var dbPath = path.resolve(__dirname, "../db/db.json")
@@ -27,13 +28,9 @@ module.exports = function (app){
             noteList.push(newNote);
 
             fs.writeFile(dbPath, JSON.stringify(noteList), function(req, res){
-                console.log("success!");
+                return;
             })
         })
-
-        
-
-
         //fs.readFile(dbPath, "utf8", function(err, data){
         //    if(err){
         //        return console.log(err);
@@ -50,14 +47,40 @@ module.exports = function (app){
             //})
         //})
     })
-    app.delete("/api/notes/:id"), function(req, res){
-        var id = req.params.id;
-        dbPath.splice(id - 1, 1);
-        dbPath.forEach(function(obj, i){
-            obj.id = i + 1;
+    app.delete("/api/notes/:id", function(req, res){
+        //console.log(req);
+        
+        var id = parseInt(req.params.id);
+        //console.log(id);
+
+        fs.readFile(dbPath, "utf8", function(err, data){
+             if(err){
+                 console.log(err);
+             }
+             var noteList = JSON.parse(data);
+
+             //iterate through file to find match
+             // delete match
+             for(var i = noteList.length - 1; i >= 0; i--) {
+                if(noteList[i].id === id) {
+                    noteList.splice(i, 1);
+                }
+            }
+
+             //save new file
+             fs.writeFile(dbPath, JSON.stringify(noteList), function(req, res){
+                return;
+            })
         })
-        fs.writeFile(dbPath, JSON.stringify(newNote), function(){
-            res.json(newNote)
-        })
-    }
+        
+        
+
+        // dbPath.splice(id - 1, 1);
+        // dbPath.forEach(function(obj, i){
+        //     obj.id = i + 1;
+        // })
+        // fs.writeFile(dbPath, JSON.stringify(newNote), function(){
+        //     res.json(newNote)
+        // })
+    })
 } 

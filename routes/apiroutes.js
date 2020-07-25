@@ -10,8 +10,6 @@ module.exports = function (app){
                 return console.log(err);
             }
             var parsed = JSON.parse(data);
-            console.log(parsed)
-
             res.json(parsed)
         })
     })
@@ -21,14 +19,24 @@ module.exports = function (app){
 
         fs.readFile(dbPath, "utf8", function(err, data){
             var noteList = JSON.parse(data);
-            var lastIndex = noteList.length - 1;
-            var lastId = parseInt(noteList[lastIndex].id);
+
+            var lastId = 0;
+            if(noteList.length === 0) {
+                // no data, make new array
+                noteList = new Array();
+            } else{
+                var lastIndex = noteList.length - 1;
+                lastId = parseInt(noteList[lastIndex].id);
+            }
+
             newNote.id = lastId + 1;
             noteList.push(newNote);
 
-            fs.writeFile(dbPath, JSON.stringify(noteList), function(req, res){
-                console.log("Note added");;
+            fs.writeFile(dbPath, JSON.stringify(noteList), function(err){
+                if(err) throw err;
+                return true;
             })
+            res.json(noteList);
         })
         //fs.readFile(dbPath, "utf8", function(err, data){
         //    if(err){
@@ -47,10 +55,8 @@ module.exports = function (app){
         //})
     })
     app.delete("/api/notes/:id", function(req, res){
-        //console.log(req);
         
         var id = parseInt(req.params.id);
-        //console.log(id);
 
         fs.readFile(dbPath, "utf8", function(err, data){
              if(err){
@@ -67,9 +73,11 @@ module.exports = function (app){
             }
 
              //save new file
-             fs.writeFile(dbPath, JSON.stringify(noteList), function(req, res){
-                console.log("note deleted");;
+             fs.writeFile(dbPath, JSON.stringify(noteList), function(err){
+                if (err) throw err;
+                return true;
             })
+            res.json(noteList);
         })
     })
 } 
